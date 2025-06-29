@@ -1,3 +1,6 @@
+// Simulated server endpoint — replace with your actual URL or raw GitHub JSON
+const SERVER_URL = "https://example.com/quotes.json"; // Replace this with a real URL
+
 let quotes = [];
 
 // Load quotes from localStorage or set default
@@ -144,6 +147,56 @@ function showLastViewedQuote() {
   }
 }
 
+// Sync with server and resolve conflicts
+async function syncWithServer() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverQuotes = await response.json();
+
+    let updated = false;
+
+    serverQuotes.forEach(serverQuote => {
+      const exists = quotes.some(localQuote =>
+        localQuote.text === serverQuote.text && localQuote.category === serverQuote.category
+      );
+
+      if (!exists) {
+        quotes.push(serverQuote);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      saveQuotes();
+      populateCategories();
+      notifyUser("New quotes synced from the server. Conflicts resolved using server data.");
+    }
+  } catch (error) {
+    console.error("Sync failed:", error);
+    notifyUser("Failed to sync with server.");
+  }
+}
+
+// Display a user-friendly notification
+function notifyUser(message) {
+  const notification = document.createElement("div");
+  notification.textContent = message;
+  notification.style.backgroundColor = "#ffeeba";
+  notification.style.color = "#333";
+  notification.style.padding = "10px";
+  notification.style.margin = "10px 0";
+  notification.style.border = "1px solid #ffc107";
+  notification.style.borderRadius = "5px";
+  notification.style.fontSize = "14px";
+  notification.style.textAlign = "center";
+
+  document.body.insertBefore(notification, document.body.firstChild);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 5000);
+}
+
 // DOM elements
 const quoteDisplay = document.getElementById("quoteDisplay");
 const categorySelect = document.getElementById("categorySelect");
@@ -158,4 +211,6 @@ window.onload = () => {
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
+  syncWithServer(); // Initial sync on page load
+  setInterval(syncWithServer, 30000); // Sync every 30 seconds
 };
