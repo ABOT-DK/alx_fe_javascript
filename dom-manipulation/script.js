@@ -172,7 +172,7 @@ async function fetchQuotesFromServer() {
     if (updated) {
       saveQuotes();
       populateCategories();
-      notifyUser("Quotes synced from JSONPlaceholder.");
+      notifyUser("Quotes synced with server!");
     }
   } catch (err) {
     console.error("Fetch failed:", err);
