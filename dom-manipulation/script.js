@@ -1,5 +1,4 @@
-// Simulated server endpoint — replace with your actual URL or raw GitHub JSON
-const SERVER_URL = "https://example.com/quotes.json"; // Replace this with a real URL
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
 
 let quotes = [];
 
@@ -35,7 +34,7 @@ function populateCategories() {
   });
 }
 
-// Filter quotes by selected category (categoryFilter)
+// Filter quotes by selected category
 function categoryFilter() {
   const selectedCategory = categorySelect.value;
   return selectedCategory === "all"
@@ -43,7 +42,7 @@ function categoryFilter() {
     : quotes.filter(q => q.category === selectedCategory);
 }
 
-// Display a random quote from filtered quotes (filterQuote)
+// Display a random quote
 function filterQuote() {
   const filteredQuotes = categoryFilter();
 
@@ -56,7 +55,6 @@ function filterQuote() {
   const quote = filteredQuotes[randomIndex];
   quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
 
-  // Save last viewed quote to sessionStorage
   sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
 }
 
@@ -70,8 +68,7 @@ function addQuote() {
     return;
   }
 
-  const newQuote = { text, category };
-  quotes.push(newQuote);
+  quotes.push({ text, category });
   saveQuotes();
   populateCategories();
 
@@ -103,7 +100,7 @@ function createAddQuoteForm() {
   container.appendChild(button);
 }
 
-// Export current quotes to a downloadable JSON file
+// Export current quotes to JSON
 function exportToJsonFile() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
@@ -118,15 +115,13 @@ function exportToJsonFile() {
   URL.revokeObjectURL(url);
 }
 
-// Import quotes from a selected JSON file
+// Import from JSON file
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(e) {
     try {
       const importedQuotes = JSON.parse(e.target.result);
-      if (!Array.isArray(importedQuotes)) {
-        throw new Error("Invalid format. Must be an array of quotes.");
-      }
+      if (!Array.isArray(importedQuotes)) throw new Error("Invalid format.");
       quotes.push(...importedQuotes);
       saveQuotes();
       populateCategories();
@@ -138,7 +133,7 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// Show the last quote viewed (if exists)
+// Show last viewed quote
 function showLastViewedQuote() {
   const last = sessionStorage.getItem("lastViewedQuote");
   if (last) {
@@ -147,21 +142,26 @@ function showLastViewedQuote() {
   }
 }
 
-// Fetch and merge quotes from the server with local ones (fetchQuotesFromServer)
+// ✅ Fetch mock quotes from JSONPlaceholder
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
-    const serverQuotes = await response.json();
+    const posts = await response.json();
 
     let updated = false;
 
-    serverQuotes.forEach(serverQuote => {
-      const exists = quotes.some(localQuote =>
-        localQuote.text === serverQuote.text && localQuote.category === serverQuote.category
+    posts.slice(0, 10).forEach(post => {
+      const newQuote = {
+        text: post.title,
+        category: "Placeholder"
+      };
+
+      const exists = quotes.some(q =>
+        q.text === newQuote.text && q.category === newQuote.category
       );
 
       if (!exists) {
-        quotes.push(serverQuote);
+        quotes.push(newQuote);
         updated = true;
       }
     });
@@ -169,32 +169,26 @@ async function fetchQuotesFromServer() {
     if (updated) {
       saveQuotes();
       populateCategories();
-      notifyUser("New quotes synced from the server. Conflicts resolved using server data.");
+      notifyUser("Quotes synced from JSONPlaceholder.");
     }
-  } catch (error) {
-    console.error("Sync failed:", error);
-    notifyUser("Failed to sync with server.");
+  } catch (err) {
+    console.error("Fetch failed:", err);
+    notifyUser("Failed to sync with placeholder server.");
   }
 }
 
-// Display a user-friendly notification
+// Notify user of sync/update
 function notifyUser(message) {
   const notification = document.createElement("div");
   notification.textContent = message;
-  notification.style.backgroundColor = "#ffeeba";
-  notification.style.color = "#333";
+  notification.style.backgroundColor = "#d9edf7";
+  notification.style.color = "#31708f";
   notification.style.padding = "10px";
   notification.style.margin = "10px 0";
-  notification.style.border = "1px solid #ffc107";
+  notification.style.border = "1px solid #bce8f1";
   notification.style.borderRadius = "5px";
-  notification.style.fontSize = "14px";
-  notification.style.textAlign = "center";
-
   document.body.insertBefore(notification, document.body.firstChild);
-
-  setTimeout(() => {
-    notification.remove();
-  }, 5000);
+  setTimeout(() => notification.remove(), 5000);
 }
 
 // DOM elements
@@ -211,6 +205,6 @@ window.onload = () => {
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
-  fetchQuotesFromServer(); // Initial fetch on load
-  setInterval(fetchQuotesFromServer, 30000); // Fetch from server every 30s
+  fetchQuotesFromServer(); // Fetch mock quotes on load
+  setInterval(fetchQuotesFromServer, 30000); // Re-fetch every 30 seconds
 };
