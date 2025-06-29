@@ -73,7 +73,7 @@ function addQuote() {
   saveQuotes();
   populateCategories();
 
-  postQuoteToServer(newQuote); // ✅ POST to server
+  postQuoteToServer(newQuote);
 
   document.getElementById("newQuoteText").value = '';
   document.getElementById("newQuoteCategory").value = '';
@@ -180,7 +180,7 @@ async function fetchQuotesFromServer() {
   }
 }
 
-// ✅ POST quote to server using method, headers, Content-Type
+// ✅ POST quote to server
 function postQuoteToServer(quote) {
   fetch(SERVER_URL, {
     method: "POST",
@@ -196,6 +196,12 @@ function postQuoteToServer(quote) {
     .catch(error => {
       console.error("Failed to post quote:", error);
     });
+}
+
+// ✅ Wrapper to sync quotes (required: syncQuotes)
+function syncQuotes() {
+  fetchQuotesFromServer(); // Pull
+  saveQuotes();            // Save locally
 }
 
 // Notify user
@@ -226,6 +232,6 @@ window.onload = () => {
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
-  fetchQuotesFromServer(); // ✅ Fetch on load
-  setInterval(fetchQuotesFromServer, 30000); // Fetch every 30 seconds
+  syncQuotes();                         // ✅ Call sync wrapper
+  setInterval(syncQuotes, 30000);      // ✅ Sync every 30 seconds
 };
