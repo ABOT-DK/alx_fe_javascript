@@ -147,8 +147,8 @@ function showLastViewedQuote() {
   }
 }
 
-// Sync with server and resolve conflicts
-async function syncWithServer() {
+// Fetch and merge quotes from the server with local ones (fetchQuotesFromServer)
+async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
     const serverQuotes = await response.json();
@@ -211,6 +211,6 @@ window.onload = () => {
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
-  syncWithServer(); // Initial sync on page load
-  setInterval(syncWithServer, 30000); // Sync every 30 seconds
+  fetchQuotesFromServer(); // Initial fetch on load
+  setInterval(fetchQuotesFromServer, 30000); // Fetch from server every 30s
 };
