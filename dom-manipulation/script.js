@@ -1,6 +1,6 @@
 let quotes = [];
 
-// Load quotes from localStorage or set defaults
+// Load quotes from localStorage or set default
 function loadQuotes() {
   const storedQuotes = localStorage.getItem("quotes");
   if (storedQuotes) {
@@ -40,8 +40,8 @@ function categoryFilter() {
     : quotes.filter(q => q.category === selectedCategory);
 }
 
-// Show a random quote from filtered list
-function showRandomQuote() {
+// Display a random quote from filtered quotes (filterQuote)
+function filterQuote() {
   const filteredQuotes = categoryFilter();
 
   if (filteredQuotes.length === 0) {
@@ -53,7 +53,7 @@ function showRandomQuote() {
   const quote = filteredQuotes[randomIndex];
   quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
 
-  // Save last viewed quote to session storage
+  // Save last viewed quote to sessionStorage
   sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
 }
 
@@ -77,7 +77,7 @@ function addQuote() {
   alert("Quote added!");
 }
 
-// Create add quote form dynamically
+// Create the Add Quote Form dynamically
 function createAddQuoteForm() {
   const container = document.getElementById("addQuoteFormContainer");
 
@@ -149,8 +149,8 @@ const quoteDisplay = document.getElementById("quoteDisplay");
 const categorySelect = document.getElementById("categorySelect");
 
 // Event listeners
-document.getElementById("newQuote").addEventListener("click", showRandomQuote);
-categorySelect.addEventListener("change", showRandomQuote); // Auto-show filtered quote
+document.getElementById("newQuote").addEventListener("click", filterQuote);
+categorySelect.addEventListener("change", filterQuote);
 
 // Initialize app
 window.onload = () => {
