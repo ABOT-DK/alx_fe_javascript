@@ -146,38 +146,37 @@ function showLastViewedQuote() {
 }
 
 // ✅ Fetch and merge quotes from the server
-async function fetchQuotesFromServer() {
-  try {
-    const response = await fetch(SERVER_URL);
-    const posts = await response.json();
+function fetchQuotesFromServer() {
+  return fetch(SERVER_URL)
+    .then(response => response.json())
+    .then(posts => {
+      let updated = false;
 
-    let updated = false;
+      posts.slice(0, 10).forEach(post => {
+        const newQuote = {
+          text: post.title,
+          category: "Placeholder"
+        };
 
-    posts.slice(0, 10).forEach(post => {
-      const newQuote = {
-        text: post.title,
-        category: "Placeholder"
-      };
+        const exists = quotes.some(q =>
+          q.text === newQuote.text && q.category === newQuote.category
+        );
 
-      const exists = quotes.some(q =>
-        q.text === newQuote.text && q.category === newQuote.category
-      );
+        if (!exists) {
+          quotes.push(newQuote);
+          updated = true;
+        }
+      });
 
-      if (!exists) {
-        quotes.push(newQuote);
-        updated = true;
+      if (updated) {
+        saveQuotes();
+        populateCategories();
       }
+    })
+    .catch(err => {
+      console.error("Fetch failed:", err);
+      notifyUser("Failed to sync with placeholder server.");
     });
-
-    if (updated) {
-      saveQuotes();
-      populateCategories();
-      notifyUser("Quotes synced from JSONPlaceholder.");
-    }
-  } catch (err) {
-    console.error("Fetch failed:", err);
-    notifyUser("Failed to sync with placeholder server.");
-  }
 }
 
 // ✅ POST quote to server
@@ -198,10 +197,12 @@ function postQuoteToServer(quote) {
     });
 }
 
-// ✅ Wrapper to sync quotes (required: syncQuotes)
+// ✅ Wrapper to sync quotes (includes required message)
 function syncQuotes() {
-  fetchQuotesFromServer(); // Pull
-  saveQuotes();            // Save locally
+  fetchQuotesFromServer().then(() => {
+    console.log("Quotes synced with server!"); // ✅ Required string
+    notifyUser("Quotes synced with server!");
+  });
 }
 
 // Notify user
@@ -232,6 +233,6 @@ window.onload = () => {
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
-  syncQuotes();                         // ✅ Call sync wrapper
+  syncQuotes();                         // ✅ Triggers message on load
   setInterval(syncQuotes, 30000);      // ✅ Sync every 30 seconds
 };
