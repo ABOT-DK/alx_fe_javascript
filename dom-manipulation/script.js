@@ -72,7 +72,6 @@ function addQuote() {
   quotes.push(newQuote);
   saveQuotes();
   populateCategories();
-
   postQuoteToServer(newQuote);
 
   document.getElementById("newQuoteText").value = '';
@@ -145,42 +144,41 @@ function showLastViewedQuote() {
   }
 }
 
-// ✅ Fetch and merge quotes from the server
-async function fetchQuotesFromServer() {
-  try {
-    const response = await fetch(SERVER_URL);
-    const posts = await response.json();
+// Fetch and merge quotes from the server
+function fetchQuotesFromServer() {
+  return fetch(SERVER_URL)
+    .then(response => response.json())
+    .then(posts => {
+      let updated = false;
 
-    let updated = false;
+      posts.slice(0, 10).forEach(post => {
+        const newQuote = {
+          text: post.title,
+          category: "Placeholder"
+        };
 
-    posts.slice(0, 10).forEach(post => {
-      const newQuote = {
-        text: post.title,
-        category: "Placeholder"
-      };
+        const exists = quotes.some(q =>
+          q.text === newQuote.text && q.category === newQuote.category
+        );
 
-      const exists = quotes.some(q =>
-        q.text === newQuote.text && q.category === newQuote.category
-      );
+        if (!exists) {
+          quotes.push(newQuote);
+          updated = true;
+        }
+      });
 
-      if (!exists) {
-        quotes.push(newQuote);
-        updated = true;
+      if (updated) {
+        saveQuotes();
+        populateCategories();
       }
+    })
+    .catch(err => {
+      console.error("Fetch failed:", err);
+      notifyUser("Failed to sync with placeholder server.");
     });
-
-    if (updated) {
-      saveQuotes();
-      populateCategories();
-      notifyUser("Quotes synced from JSONPlaceholder.");
-    }
-  } catch (err) {
-    console.error("Fetch failed:", err);
-    notifyUser("Failed to sync with placeholder server.");
-  }
 }
 
-// ✅ POST quote to server
+// POST new quote to server
 function postQuoteToServer(quote) {
   fetch(SERVER_URL, {
     method: "POST",
@@ -198,13 +196,15 @@ function postQuoteToServer(quote) {
     });
 }
 
-// ✅ Wrapper to sync quotes (required: syncQuotes)
+// ✅ Sync function including required message
 function syncQuotes() {
-  fetchQuotesFromServer(); // Pull
-  saveQuotes();            // Save locally
+  fetchQuotesFromServer().then(() => {
+    console.log("Quotes synced with server!"); // ✅ Required message
+    notifyUser("Quotes synced with server!");
+  });
 }
 
-// Notify user
+// Notification banner
 function notifyUser(message) {
   const notification = document.createElement("div");
   notification.textContent = message;
@@ -226,12 +226,12 @@ const categorySelect = document.getElementById("categorySelect");
 document.getElementById("newQuote").addEventListener("click", filterQuote);
 categorySelect.addEventListener("change", filterQuote);
 
-// Initialize app
+// App startup
 window.onload = () => {
   loadQuotes();
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
-  syncQuotes();                         // ✅ Call sync wrapper
-  setInterval(syncQuotes, 30000);      // ✅ Sync every 30 seconds
+  syncQuotes(); // ✅ First sync
+  setInterval(syncQuotes, 30000); // ✅ Sync every 30 sec
 };
