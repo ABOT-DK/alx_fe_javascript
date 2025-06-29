@@ -68,9 +68,12 @@ function addQuote() {
     return;
   }
 
-  quotes.push({ text, category });
+  const newQuote = { text, category };
+  quotes.push(newQuote);
   saveQuotes();
   populateCategories();
+
+  postQuoteToServer(newQuote); // ✅ POST to server
 
   document.getElementById("newQuoteText").value = '';
   document.getElementById("newQuoteCategory").value = '';
@@ -142,7 +145,7 @@ function showLastViewedQuote() {
   }
 }
 
-// ✅ Fetch mock quotes from JSONPlaceholder
+// ✅ Fetch and merge quotes from the server
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
@@ -177,7 +180,25 @@ async function fetchQuotesFromServer() {
   }
 }
 
-// Notify user of sync/update
+// ✅ POST quote to server using method, headers, Content-Type
+function postQuoteToServer(quote) {
+  fetch(SERVER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(quote)
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Quote posted to server:", data);
+    })
+    .catch(error => {
+      console.error("Failed to post quote:", error);
+    });
+}
+
+// Notify user
 function notifyUser(message) {
   const notification = document.createElement("div");
   notification.textContent = message;
@@ -205,6 +226,6 @@ window.onload = () => {
   populateCategories();
   createAddQuoteForm();
   showLastViewedQuote();
-  fetchQuotesFromServer(); // Fetch mock quotes on load
-  setInterval(fetchQuotesFromServer, 30000); // Re-fetch every 30 seconds
+  fetchQuotesFromServer(); // ✅ Fetch on load
+  setInterval(fetchQuotesFromServer, 30000); // Fetch every 30 seconds
 };
